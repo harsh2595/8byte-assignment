@@ -131,7 +131,7 @@ resource "aws_ecs_task_definition" "app" {
         },
         {
           name  = "DB_SSL"
-          value = "false"
+          value = "true"
         }
       ]
 
