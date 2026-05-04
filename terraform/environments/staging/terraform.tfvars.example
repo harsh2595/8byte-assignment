@@ -1,0 +1,7 @@
+aws_region          = "ap-south-1"
+project_name        = "8byte-assignment"
+environment         = "staging"
+image_tag           = "latest"
+desired_count       = 1
+alarm_email         = null
+alb_access_logs_bucket = null

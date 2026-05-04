@@ -1,0 +1,96 @@
+name: PR checks
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  app:
+    name: App tests and image scan
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Dependency vulnerability scan
+        run: npm audit --audit-level=high
+
+      - name: Build Docker image
+        run: docker build -t 8byte-sample-api:pr .
+
+      - name: Container vulnerability scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: 8byte-sample-api:pr
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: 1
+
+  terraform:
+    name: Terraform checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.3
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive terraform
+
+      - name: Terraform init and validate bootstrap
+        working-directory: terraform/bootstrap
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Terraform init and validate staging
+        working-directory: terraform/environments/staging
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Terraform init and validate production
+        working-directory: terraform/environments/production
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Terraform security scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: terraform
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: 1

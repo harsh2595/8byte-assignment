@@ -1,0 +1,195 @@
+Live Deployment Requirements
+============================
+
+This repository is ready from the code and infrastructure side.
+To make the deployment live on AWS, the following real account-specific setup is required.
+
+
+1. AWS Account Access
+---------------------
+
+Required:
+- An AWS account where resources can be created.
+- Permission to create and manage:
+  - VPC
+  - Subnets
+  - NAT Gateway
+  - Security Groups
+  - Application Load Balancer
+  - ECS Fargate
+  - ECR
+  - RDS PostgreSQL
+  - Secrets Manager
+  - CloudWatch
+  - S3
+  - DynamoDB
+  - IAM roles and policies
+
+
+2. Terraform Remote State
+-------------------------
+
+Terraform needs remote state before staging/production can be deployed.
+
+Run the bootstrap Terraform first:
+
+  cd terraform/bootstrap
+  terraform init
+  terraform apply -var="state_bucket_name=<globally-unique-s3-bucket-name>"
+
+After bootstrap, update these files:
+
+  terraform/environments/staging/backend.tf
+  terraform/environments/production/backend.tf
+
+Replace:
+
+  REPLACE_WITH_UNIQUE_STATE_BUCKET
+
+With the real S3 bucket name created by bootstrap.
+
+
+3. GitHub Repository
+--------------------
+
+Required:
+- Push this project to a GitHub repository.
+- Default branch should be main.
+
+
+4. GitHub Environments
+----------------------
+
+Create these GitHub Environments:
+
+  staging
+  production
+
+For production:
+- Add required manual approval reviewers.
+
+This satisfies the assignment requirement for manual production approval.
+
+
+5. GitHub Secrets
+-----------------
+
+Required secret:
+
+  AWS_ROLE_TO_ASSUME
+
+Value:
+
+  ARN of the AWS IAM role that GitHub Actions will assume.
+
+Example format:
+
+  arn:aws:iam::<aws-account-id>:role/<github-actions-deploy-role>
+
+Optional secret:
+
+  SLACK_WEBHOOK_URL
+
+Use this only if Slack failure notifications are required.
+
+
+6. GitHub Variables
+-------------------
+
+Optional variables:
+
+  AWS_REGION
+
+Default used by repo:
+
+  ap-south-1
+
+Optional variables:
+
+  STAGING_ECR_REPOSITORY
+  PRODUCTION_ECR_REPOSITORY
+
+Defaults used by repo:
+
+  8byte-assignment-staging-app
+  8byte-assignment-production-app
+
+
+7. AWS IAM Role for GitHub Actions
+----------------------------------
+
+Create an IAM role that GitHub Actions can assume using OIDC.
+
+The role must trust GitHub Actions for your repository.
+
+The role needs permissions for:
+- ECR image push
+- ECS service updates
+- Terraform-managed AWS resources
+- S3 Terraform state access
+- DynamoDB state lock access
+
+For assignment/demo speed, AdministratorAccess can work.
+For production, use least-privilege permissions.
+
+
+8. First Deployment Order
+-------------------------
+
+Recommended order:
+
+1. Bootstrap Terraform state.
+2. Update backend.tf files with real state bucket.
+3. Push repository to GitHub.
+4. Configure GitHub environments, secrets, and variables.
+5. Run staging Terraform once with desired_count=0 to create ECR first:
+
+     cd terraform/environments/staging
+     terraform init
+     terraform apply -var="desired_count=0" -var="image_tag=bootstrap"
+
+6. Merge to main or manually run the staging workflow.
+7. Confirm staging app is healthy through the ALB URL.
+8. Trigger production workflow manually with the tested image tag.
+9. Approve production deployment in GitHub.
+
+
+9. Smoke Test
+-------------
+
+After deployment, verify the application:
+
+  bash scripts/smoke-test.sh <application-url>
+
+Example:
+
+  bash scripts/smoke-test.sh http://example-alb.ap-south-1.elb.amazonaws.com
+
+
+10. Values Not Required Manually
+--------------------------------
+
+You do not need to manually enter:
+- database password
+- RDS endpoint
+- ECR URL
+- ALB DNS name
+- ECS cluster name
+- ECS service name
+
+Terraform creates or outputs these values dynamically.
+
+
+11. Optional Production Improvements
+------------------------------------
+
+For a stronger production setup, add:
+- ACM certificate
+- HTTPS listener on ALB
+- Route53 domain
+- WAF
+- RDS Multi-AZ
+- one NAT Gateway per Availability Zone
+- stricter IAM permissions for GitHub Actions
+- VPC endpoints for ECR, CloudWatch, and Secrets Manager
+

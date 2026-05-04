@@ -1,0 +1,76 @@
+name: Deploy staging
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'ap-south-1' }}
+  ECR_REPOSITORY: ${{ vars.STAGING_ECR_REPOSITORY || '8byte-assignment-staging-app' }}
+  TF_WORKING_DIR: terraform/environments/staging
+
+jobs:
+  deploy:
+    name: Build, push, and deploy staging
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image tag
+        run: echo "IMAGE_TAG=${GITHUB_SHA}" >> "$GITHUB_ENV"
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: app
+          push: true
+          tags: |
+            ${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+            ${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.3
+
+      - name: Terraform init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      - name: Terraform apply staging
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform apply -auto-approve -var="image_tag=${IMAGE_TAG}"
+
+      - name: Smoke test
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          APP_URL="$(terraform output -raw application_url)"
+          cd ../../..
+          bash scripts/smoke-test.sh "${APP_URL}"
+
+      - name: Notify Slack on failure
+        if: failure() && env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"Staging deployment failed for ${GITHUB_REPOSITORY}@${GITHUB_SHA}\"}" \
+            "${SLACK_WEBHOOK_URL}"
