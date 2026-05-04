@@ -24,7 +24,7 @@ resource "aws_s3_bucket" "alb_logs" {
   count = var.alb_access_logs_bucket == null ? 1 : 0
 
   bucket        = "${local.name}-alb-logs-${random_id.alb_logs[0].hex}"
-  force_destroy = false
+  force_destroy = true
 
   tags = merge(local.common_tags, {
     Name = "${local.name}-alb-logs"
@@ -184,9 +184,9 @@ module "rds" {
   allocated_storage         = var.db_allocated_storage
   backup_retention_days     = var.backup_retention_days
   multi_az                  = var.db_multi_az
-  deletion_protection       = true
-  skip_final_snapshot       = false
-  final_snapshot_identifier = "snapshot-${local.name}-final"
+  deletion_protection       = false
+  skip_final_snapshot       = true
+  final_snapshot_identifier = null
   tags                      = local.common_tags
 }
 
