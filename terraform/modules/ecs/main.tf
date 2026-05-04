@@ -187,10 +187,6 @@ resource "aws_ecs_service" "app" {
     container_port   = var.app_port
   }
 
-  lifecycle {
-    ignore_changes = [desired_count]
-  }
-
   tags = merge(var.tags, {
     Name = "${var.name}-app"
   })
