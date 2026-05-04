@@ -79,13 +79,13 @@ variable "db_username" {
 variable "db_instance_class" {
   description = "RDS instance class."
   type        = string
-  default     = "db.t4g.small"
+  default     = "db.t4g.micro"
 }
 
 variable "db_allocated_storage" {
   description = "RDS allocated storage in GB."
   type        = number
-  default     = 30
+  default     = 20
 }
 
 variable "db_multi_az" {
@@ -97,7 +97,7 @@ variable "db_multi_az" {
 variable "backup_retention_days" {
   description = "RDS automated backup retention days."
   type        = number
-  default     = 14
+  default     = 1
 }
 
 variable "log_retention_days" {

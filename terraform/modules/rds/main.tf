@@ -5,7 +5,7 @@ resource "random_password" "db" {
 }
 
 resource "aws_db_subnet_group" "this" {
-  name       = "${var.name}-db-subnets"
+  name       = "db-${var.name}-subnets"
   subnet_ids = var.private_subnet_ids
 
   tags = merge(var.tags, {
@@ -14,10 +14,9 @@ resource "aws_db_subnet_group" "this" {
 }
 
 resource "aws_db_instance" "this" {
-  identifier = "${var.name}-postgres"
+  identifier = "db-${var.name}-postgres"
 
   engine         = "postgres"
-  engine_version = "16.3"
   instance_class = var.instance_class
 
   allocated_storage     = var.allocated_storage

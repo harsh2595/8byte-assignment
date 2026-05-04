@@ -11,7 +11,7 @@ permissions:
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION || 'ap-south-1' }}
-  ECR_REPOSITORY: ${{ vars.STAGING_ECR_REPOSITORY || '8byte-assignment-staging-app' }}
+  ECR_REPOSITORY: ${{ vars.STAGING_ECR_REPOSITORY || 'app-8byte-assignment-staging-app' }}
   TF_WORKING_DIR: terraform/environments/staging
 
 jobs:

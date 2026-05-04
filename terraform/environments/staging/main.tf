@@ -120,7 +120,7 @@ module "security_groups" {
 }
 
 resource "aws_ecr_repository" "app" {
-  name                 = "${local.name}-app"
+  name                 = "app-${local.name}-app"
   image_tag_mutability = "MUTABLE"
   force_delete         = var.ecr_force_delete
 
@@ -168,6 +168,8 @@ module "alb" {
   app_port           = var.app_port
   access_logs_bucket = var.alb_access_logs_bucket == null ? aws_s3_bucket.alb_logs[0].id : var.alb_access_logs_bucket
   tags               = local.common_tags
+
+  depends_on = [aws_s3_bucket_policy.alb_logs]
 }
 
 module "rds" {

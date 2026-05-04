@@ -71,10 +71,10 @@ Security controls implemented:
 
 ## Backup Strategy
 
-RDS automated backups are enabled with different retention by environment:
+RDS automated backups are enabled with free-tier-compatible retention:
 
-- staging: 7 days
-- production: 14 days
+- staging: 1 day
+- production: 1 day
 
 Production also enables deletion protection and final snapshot behavior.
 
@@ -83,7 +83,7 @@ Production also enables deletion protection and final snapshot behavior.
 The design intentionally keeps assignment cost under control:
 
 - small ECS tasks
-- small RDS instances
+- free-tier-compatible RDS instances
 - single NAT Gateway
 - short staging log retention
 - access log lifecycle expiration

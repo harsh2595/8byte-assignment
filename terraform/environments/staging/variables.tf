@@ -91,7 +91,7 @@ variable "db_allocated_storage" {
 variable "backup_retention_days" {
   description = "RDS automated backup retention days."
   type        = number
-  default     = 7
+  default     = 1
 }
 
 variable "log_retention_days" {

@@ -17,7 +17,7 @@ permissions:
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION || 'ap-south-1' }}
-  ECR_REPOSITORY: ${{ vars.PRODUCTION_ECR_REPOSITORY || '8byte-assignment-production-app' }}
+  ECR_REPOSITORY: ${{ vars.PRODUCTION_ECR_REPOSITORY || 'app-8byte-assignment-production-app' }}
   TF_WORKING_DIR: terraform/environments/production
 
 jobs:

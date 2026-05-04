@@ -192,8 +192,8 @@ ALB access logs are written to an encrypted S3 bucket with lifecycle retention. 
 
 RDS automated backups are enabled:
 
-- staging default retention: 7 days
-- production default retention: 14 days
+- staging default retention: 1 day for AWS free-tier compatibility
+- production default retention: 1 day for AWS free-tier compatibility
 - production has deletion protection and final snapshot enabled
 
 Restore approach:
@@ -205,7 +205,7 @@ Restore approach:
 ## Cost Optimization
 
 - Small ECS task sizes by default
-- Small RDS instance classes by default
+- Free-tier-compatible RDS instance classes by default
 - One NAT Gateway for assignment cost control
 - Shorter log retention in staging
 - ECR lifecycle policy limits old images

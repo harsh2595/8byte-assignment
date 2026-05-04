@@ -111,8 +111,8 @@ Optional variables:
 
 Defaults used by repo:
 
-  8byte-assignment-staging-app
-  8byte-assignment-production-app
+  app-8byte-assignment-staging-app
+  app-8byte-assignment-production-app
 
 
 7. AWS IAM Role for GitHub Actions
@@ -192,4 +192,3 @@ For a stronger production setup, add:
 - one NAT Gateway per Availability Zone
 - stricter IAM permissions for GitHub Actions
 - VPC endpoints for ECR, CloudWatch, and Secrets Manager
-
